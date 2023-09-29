@@ -32,6 +32,8 @@ code {
     right: 0;
 
     display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 20px;
 
     background-color: #C5DDFF;

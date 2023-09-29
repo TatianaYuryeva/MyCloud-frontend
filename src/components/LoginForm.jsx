@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-export default function LoginForm({setLoginStatus, navigateTo}) {
+export default function LoginForm({setLoginStatus, setToken, getUserName, navigateTo}) {
   const [username, setUsername] = useState('')
   const [userPassword, setUserpassword] = useState('')
   //const [isLogined, setLogin] = useState(false)
@@ -25,9 +25,11 @@ export default function LoginForm({setLoginStatus, navigateTo}) {
 
     const res = await response.json()
 
-    //console.log(res.token)
+    console.log(res.token)
     if (res.token) {
       setLoginStatus(true)
+      setToken(res.token)
+      getUserName(res.token)
       navigateTo('/')
     } else {
       console.log(res)
