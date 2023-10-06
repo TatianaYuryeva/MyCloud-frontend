@@ -1,72 +1,94 @@
-import { useState } from "react"
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
 
-export default function RegisterForm() {
-  const [username, setUsername] = useState('')
-  const [userFirstname, setUserFirstname] = useState('')
-  const [userLastname, setUserLastname] = useState('')
-  const [userEmail, setUseremail] = useState('')
-  const [userPassword, setUserpassword] = useState('')
+const RegisterSchema = Yup.object().shape({
+  username: Yup.string()
+    .min(4, 'Минимум 4 символа')
+    .max(20, 'Максимум 20 символов')
+    .matches(/^[a-z][a-z\d]+$/gi, 'Должен содержать только латинские буквы и цифры. Первый символ - буква.')
+    .required('Обязательное поле'),
+  firstName: Yup.string()
+    .matches(/^[a-zа-я]+$/gi, 'Введите корректное имя')
+    .required('Обязательное поле'),
+  lastName: Yup.string()
+    .matches(/^[a-zа-я]+$/gi, 'Введите корректную фамилию')
+    .required('Обязательное поле'),
+  email: Yup.string()
+    .email('Неверный email')
+    .required('Обязательное поле'),
+  password: Yup.string()
+    .min(6, 'Минимум 6 символов')
+    .matches(/(?=.*[A-Za-z])(?=.*\d)(?=.*[$><\[\]+:%*?&])/, 'Должен содержать как минимум одну заглавную латинскую букву, цифру и спецсимвол($><[]+:%*?)')
+    .required('Обязательное поле'),
+});
 
-  const user = {
-    username: username,
-    first_name: userFirstname,
-    last_name: userLastname,
-    email: userEmail,
-    password: userPassword
-  }
-  
-
-  const addUser = async (e) => {
-    e.preventDefault()
-    console.log(user)
-
-    const response = await fetch('http://localhost:8000/users/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(user)
-    })
-  }
+export default function RegisterForm({navigateTo}) {
 
   return (
-    <form className="form form-register" onSubmit={addUser}>
-      <div className="form-group">
-        <label htmlFor="form-register__username">Логин</label>
-          <input type="text" 
-            value={user.username}
-            onChange={e => setUsername(e.target.value)}
-          />
-        </div>  
-      <div className="form-group">
-        <label htmlFor="form-register__first-name">Имя</label>
-          <input type="text" 
-            value={user.first_name}
-            onChange={e => setUserFirstname(e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-        <label htmlFor="form-register__last-name">Фамилия</label>
-          <input type="text" 
-            value={user.last_name}
-            onChange={e => setUserLastname(e.target.value)}
-          />
-        </div> 
-        <div className="form-group">
-        <label htmlFor="form-register__email">Эл. почта</label>
-          <input type="email" 
-            value={user.email}
-            onChange={e => setUseremail(e.target.value)}
-          />
-        </div> 
-        <div className="form-group">
-        <label htmlFor="form-register__password">Пароль</label>
-          <input type="password" 
-            value={user.password}
-            onChange={e => setUserpassword(e.target.value)}
-          />
-        </div>              
-        <button className="btn form__btn">Регистрация</button>
-      </form>
+    <div>
+      <Formik
+        initialValues={{
+          username: '',
+          firstName: '',
+          lastName: '',
+          email: '',
+          password: ''
+        }}
+        validationSchema={RegisterSchema}
+        onSubmit={ async (values) => {
+          console.log(values);
+          const response = await fetch('http://localhost:8000/users/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(values)
+          })   
+          console.log(response) 
+          navigateTo('/login')     
+        }}
+      >
+        {({ errors, touched }) => (
+          <Form className="form form-register">
+            <div className="form__group">
+              <label htmlFor="username">Логин</label>
+              <Field name="username" />
+              {errors.username && touched.username ? (
+              <div className="error-message">{errors.username}</div>
+              ) : null}
+            </div>   
+            <div className="form__group">
+              <label htmlFor="firstName">Имя</label>
+              <Field name="firstName" />
+              {errors.firstName && touched.firstName ? (
+                <div className="error-message">{errors.firstName}</div>
+              ) : null}
+            </div> 
+            <div className="form__group">
+              <label htmlFor="form-register__last-name">Фамилия</label>
+              <Field name="lastName" />
+              {errors.lastName && touched.lastName ? (
+                <div className="error-message">{errors.lastName}</div>
+              ) : null}
+            </div>
+            <div className="form__group">
+              <label htmlFor="form-register__email">Эл. почта</label>
+              <Field name="email" type="email" />
+              {errors.email && touched.email ? (
+              <div className="error-message">{errors.email}</div>
+              ) : null}
+            </div>
+            <div className="form__group">
+              <label htmlFor="form-register__password">Пароль</label>
+              <Field name="password" type="password"/>
+              {errors.password && touched.password ? (
+                <div className="error-message">{errors.password}</div>
+              ) : null}
+            </div>
+            <button type="submit" className="btn form__btn">Регистрация</button>
+          </Form>
+        )}
+      </Formik>
+  </div>
   )
 }

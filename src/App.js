@@ -29,7 +29,7 @@ function App() {
     setUserName(res.first_name) 
   }
 
-  const logout = async (token) => {
+  const fetchLogout = async (token) => {
     //e.preventDefault()
     console.log(`Token ${token}`)
 
@@ -54,21 +54,38 @@ function App() {
     
   }
 
-  const clickHandler = (isLogined) => {
+  const logout = (isLogined) => {
     if (isLogined) {
-      logout(token)
+      fetchLogout(token)
       setLogined(false)
     }
   }
 
+  // const addFile = async (e, token, file) => {
+  //   e.preventDefault()
+  //   //console.log(e.target)
+  //   console.log(file)
+
+  //   const response = await fetch('http://localhost:8000/files/', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       Authorization: `Token ${token}`
+  //     },
+  //     body: JSON.stringify({upload: file})
+  //   })
+  // }
+
+
   return (
     <div className="App">
-      <Menu loginStatus={isLogined} clickHandler={clickHandler} userName={userName}/>
+      <Menu loginStatus={isLogined} clickHandler={logout} userName={userName}/>
       <div className="page">
         <Routes>
           <Route path="/login" exact element={<LoginForm setLoginStatus={setLogined} setToken={setToken} getUserName={getUserName} navigateTo={navigateTo}/>} />
-          <Route path="/register" element={<RegisterForm />} />
-          <Route path="/storage" element={<UploadForm />} />
+          <Route path="/register" element={<RegisterForm navigateTo={navigateTo}/>} />
+          <Route path="/storage" element={<UploadForm token={token}/>} />
+
         </Routes>
       </div>
     </div>
