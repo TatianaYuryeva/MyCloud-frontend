@@ -1,10 +1,9 @@
 import { useState } from "react"
 import { NavLink } from "react-router-dom"
 
-export default function LoginForm({setLoginStatus, setToken, getUserName, navigateTo}) {
+export default function LoginForm({setLoginStatus, setToken, fetchUser, navigateTo}) {
   const [username, setUsername] = useState('')
   const [userPassword, setUserpassword] = useState('')
-  //const [isLogined, setLogin] = useState(false)
 
   const user = {
     username: username,
@@ -14,7 +13,6 @@ export default function LoginForm({setLoginStatus, setToken, getUserName, naviga
 
   const login = async (e) => {
     e.preventDefault()
-    //console.log(user)
 
     const response = await fetch('http://localhost:8000/login/', {
       method: 'POST',
@@ -26,11 +24,11 @@ export default function LoginForm({setLoginStatus, setToken, getUserName, naviga
 
     const res = await response.json()
 
-    console.log(res)
     if (res.token) {
+      localStorage.setItem('token', res.token)
       setLoginStatus(true)
       setToken(res.token)
-      getUserName(res.token)
+      fetchUser(res.token, username)
       navigateTo('/storage')
     } else {
       console.log(res)

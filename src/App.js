@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Routes, Route, useNavigate } from "react-router-dom";
 
 import LoginForm from "./components/LoginForm";
@@ -7,16 +7,26 @@ import UploadForm from "./components/UploadForm";
 
 import './App.css';
 import Menu from "./components/Menu";
+import Administration from './components/Administration';
 
 function App() {
   const [isLogined, setLogined] = useState(false)
   const [token, setToken] = useState(undefined)
   const [userName, setUserName] = useState(undefined)
+  const [isAdmin, setIsAdmin] = useState(false)
   const navigateTo = useNavigate()
 
-  const getUserName = async (token) => {
-    console.log(token)
-    const response = await fetch('http://localhost:8000/users/1/', {
+  const getUser = () => {
+    if (localStorage.getItem('token')) {
+      setToken(localStorage.getItem('token'))
+      setUserName(localStorage.getItem('name'))
+      setIsAdmin(localStorage.getItem('isAdmin') === 'true' ? true : false)
+      setLogined(true)
+    }
+  }
+
+  const fetchUser = async (token, username) => {
+    const response = await fetch(`http://localhost:8000/users/?username=${username}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -25,14 +35,26 @@ function App() {
     })
 
     const res = await response.json()
+    setUserName(res[0].first_name)
+    setIsAdmin(res.is_staff)
+    localStorage.setItem('name', res[0].first_name)
+    localStorage.setItem('isAdmin', res[0].is_staff)
+  }
+
+  const fetchUsersList = async (token) => {
+    const response = await fetch('http://localhost:8000/users/', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Token ${token}`
+      } 
+    })
+
+    const res = await response.json()
     console.log(res)
-    setUserName(res.first_name) 
   }
 
   const fetchLogout = async (token) => {
-    //e.preventDefault()
-    console.log(`Token ${token}`)
-
     const response = await fetch('http://localhost:8000/logout/', {
       method: 'GET',
       headers: {
@@ -41,51 +63,36 @@ function App() {
       }
     })
 
-    //const res = await response.json()
-    setToken(undefined)
-    setUserName(undefined)
-    console.log(response.status)
-    // if (res.token) {
-    //   setLoginStatus(true)
-    //   navigateTo('/')
-    // } else {
-    //   console.log(res)
-    // }
+    if (response.status === 200) {
+      setLogined(false)
+      setToken(undefined)
+      setUserName(undefined)
+      setIsAdmin(false)
+      localStorage.clear()
+    }
     
   }
 
   const logout = (isLogined) => {
     if (isLogined) {
       fetchLogout(token)
-      setLogined(false)
     }
   }
 
-  // const addFile = async (e, token, file) => {
-  //   e.preventDefault()
-  //   //console.log(e.target)
-  //   console.log(file)
-
-  //   const response = await fetch('http://localhost:8000/files/', {
-  //     method: 'POST',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       Authorization: `Token ${token}`
-  //     },
-  //     body: JSON.stringify({upload: file})
-  //   })
-  // }
-
+  useEffect(() => {
+    getUser()
+  }, [])
 
   return (
     <div className="App">
       <Menu loginStatus={isLogined} clickHandler={logout} userName={userName}/>
       <div className="page">
         <Routes>
-          <Route path="/login" exact element={<LoginForm setLoginStatus={setLogined} setToken={setToken} getUserName={getUserName} navigateTo={navigateTo}/>} />
+          <Route path="/login" exact element={<LoginForm setLoginStatus={setLogined} setToken={setToken} fetchUser={fetchUser} navigateTo={navigateTo}/>} />
           <Route path="/register" element={<RegisterForm navigateTo={navigateTo}/>} />
           <Route path="/storage" element={<UploadForm token={token}/>} />
-
+          <Route path="/admin" element={isAdmin ? <Administration token={token} fetchUsersList={fetchUsersList}/> : `
+          У вас нет прав для просмотра данной страницы`} />
         </Routes>
       </div>
     </div>
